@@ -38,7 +38,7 @@ impl GridPosition {
     pub fn new_for_move(pos: GridPosition, dir: Direction) -> Self {
         match dir {
             Direction::Left => GridPosition::new(pos.x - 1, pos.y),
-            Direction::Right => GridPosition::new(pos.x + 1, pos.y),
+            Direction::Right => GridPosition::new(pos.x + 1, pos.y), // add speed
             Direction::None => pos,
         }
     }
@@ -208,7 +208,7 @@ impl GameState {
             let new_obstacle = Obstacle::new(GridPosition::new(rand::thread_rng().gen_range(0..GRID_SIZE.0), 0));
             self.obstacles.push(new_obstacle);
         }
-    }
+    }    
 }
 
 impl event::EventHandler for GameState {
@@ -216,8 +216,16 @@ impl event::EventHandler for GameState {
         while ctx.time.check_update_time(DESIRED_FPS) {
             self.player.update(self.player.dir, &self.obstacles);
             self.update_obstacle();
+
+            if self.player.body.pos.x < 0 && self.player.dir == Direction::Left {
+                self.player.dir = Direction::Right;
+            }
+            if self.player.body.pos.x >= GRID_SIZE.0 && self.player.dir == Direction::Right {
+                self.player.dir = Direction::Left;
+            }
+
             if let PlayerState::Alive = self.player.state {
-                self.score += 0.25;
+                self.score += 0.1;
             }
         }
 
@@ -234,21 +242,21 @@ impl event::EventHandler for GameState {
         }
 
         if let PlayerState::Alive = self.player.state {
-            let text = graphics::Text::new(format!("Score: {}", self.score.trunc())
-                .clone());
+            let text = graphics::Text::new(format!("Score: {}", self.score.trunc()));
             let dest_point = Vec2::new(0.0, 0.0);
             canvas.draw(
                 &text, 
-                graphics::DrawParam::from(dest_point).color(graphics::Color::WHITE));
+                graphics::DrawParam::from(dest_point).color(graphics::Color::WHITE)
+            );
         }
 
         if let PlayerState::Dead = self.player.state {
-            let text = graphics::Text::new(format!("Game Over! \n Score: {}", self.score.trunc()))
-                .clone();
+            let text = graphics::Text::new(format!("Game Over! \n Score: {}", self.score.trunc()));
             let dest_point = Vec2::new((SCREEN_SIZE.0 / 2.0) - 2.0, SCREEN_SIZE.1 / 2.0);
             canvas.draw(
                 &text, 
-                graphics::DrawParam::from(dest_point).color(graphics::Color::WHITE));
+                graphics::DrawParam::from(dest_point).color(graphics::Color::WHITE)
+            );
         }
 
         canvas.finish(ctx)?;
@@ -258,7 +266,6 @@ impl event::EventHandler for GameState {
     
     fn key_down_event(&mut self, _ctx: &mut Context, input: KeyInput, _repeat: bool) -> GameResult {
         if let Some(dir) = input.keycode.and_then(Direction::from_keycode) {
-            // Only allow left or right movement
             if dir == Direction::Left || dir == Direction::Right {
                 self.player.dir = dir;
             }

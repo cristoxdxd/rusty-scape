@@ -1,2 +1,5 @@
 # rusty-scape
-rusty-scape es un videojuego desarrollado en Rust que desafía al jugador a superar obstáculos y alcanzar la máxima puntuación posible. 
+A falling-blocks-type 2D game that challenge the player to avoid falling blocks to get the best score.
+
+## About
+Game-dev framework used is [ggez](https://ggez.rs/).
